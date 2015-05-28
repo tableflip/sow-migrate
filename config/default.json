@@ -1,0 +1,4 @@
+{
+  "mysql": "mysql://localhost/sow",
+  "mongo": "mongodb://localhost/sow"
+}
