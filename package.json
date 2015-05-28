@@ -14,5 +14,14 @@
     "moment": "^2.10.3",
     "mongodb": "^2.0.33",
     "mysql": "^2.7.0"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tableflip/sow-migrate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tableflip/sow-migrate/issues"
+  },
+  "homepage": "https://github.com/tableflip/sow-migrate#readme"
 }
