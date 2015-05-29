@@ -53,7 +53,7 @@ mongo.MongoClient.connect(config.mongo, function (er, mongoConn) {
       cb(er, products, classes)
     },
     function (products, classes, cb) {
-      insertTags(products, classes, mongoConn, function (er, tags) {
+      insertTags(classes, products, mongoConn, function (er, tags) {
         console.log(tags.length, 'tags inserted')
         cb(er, products, classes)
       })
@@ -231,16 +231,32 @@ function filterProducts (allClasses, allProds) {
 
 function insertTags (classes, products, conn, cb) {
   var ClassTag = conn.collection('classtags')
+  var ProductTag = conn.collection('producttags')
 
-  var tasks = classes.concat(products).reduce(function (tasks, c) {
-    return tasks.concat(c.categories.map(function (cat) {
-      return function (cb) {
-        ClassTag.insert({name: cat.name}, cb)
-      }
-    }))
-  }, [])
+  var tasks = getCategoryNames(classes).map(function (name) {
+    return function (cb) {
+      ClassTag.insert({name: name}, cb)
+    }
+  })
+
+  tasks = tasks.concat(getCategoryNames(products).map(function (name) {
+    return function (cb) {
+      ProductTag.insert({name: name}, cb)
+    }
+  }))
 
   async.parallel(tasks, cb)
+}
+
+function getCategoryNames (items) {
+  return items.reduce(function (cats, item) {
+    var dedupedCats = item.categories.filter(function (cat) {
+      return cats.indexOf(cat.name) == -1
+    }).map(function (cat) {
+      return cat.name
+    })
+    return cats.concat(dedupedCats)
+  }, [])
 }
 
 function insertClasses (classes, conn, cb) {
