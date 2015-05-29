@@ -4,6 +4,7 @@ var async = require('async')
 var mongo = require('mongodb')
 var mysql = require('mysql')
 var moment = require('moment')
+var slug = require('./slug')
 
 mongo.MongoClient.connect(config.mongo, function (er, mongoConn) {
   if (er) throw er
@@ -249,6 +250,7 @@ function insertClasses (classes, conn, cb) {
     return function (cb) {
       Class.insert({
         name: c.name,
+        slug: slug(c.name),
         intro: c.intro,
         desc: c.desc,
         tags: c.categories.map(function (cat) {
@@ -274,6 +276,7 @@ function insertProducts (products, conn, cb) {
     return function (cb) {
       Product.insert({
         name: c.name,
+        slug: slug(c.name),
         intro: c.intro,
         desc: c.desc,
         tags: c.categories.map(function (cat) {
