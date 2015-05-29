@@ -4,6 +4,7 @@
   "description": "Scripts to migrate from old MySQL SOW database to new MongoDB database",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Alan Shaw",
