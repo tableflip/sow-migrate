@@ -201,8 +201,20 @@ function getTimeInfo (name) {
 
   return {
     date: startDate.toDate(),
-    duration: ((((endDate.valueOf() - startDate.valueOf()) / 1000) / 60) / 60) + ' hours'
+    duration: hoursToDuration(((((endDate.valueOf() - startDate.valueOf()) / 1000) / 60) / 60))
   }
+}
+
+const HoursDurationMap = {
+  '3': 'THREE_HOUR',
+  '5.5': 'ONE_DAY',
+  '6': 'ONE_DAY'
+}
+
+function hoursToDuration (hours) {
+  var duration = HoursDurationMap[hours]
+  if (!duration) throw new Error('Unknown duration ' + hours)
+  return duration
 }
 
 function filterProducts (allClasses, allProds) {
