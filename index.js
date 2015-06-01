@@ -55,17 +55,17 @@ mongo.MongoClient.connect(config.mongo, function (er, mongoConn) {
     function (products, classes, cb) {
       insertTags(classes, products, mongoConn, function (er, tags) {
         console.log(tags.length, 'tags inserted')
-        cb(er, products, classes)
+        cb(er, products, classes, tags)
       })
     },
-    function (products, classes, cb) {
-      insertProducts(products, mongoConn, function (er, products) {
+    function (products, classes, tags, cb) {
+      insertProducts(products, tags, mongoConn, function (er, products) {
         console.log(products.length, 'products inserted')
-        cb(er, products, classes)
+        cb(er, products, classes, tags)
       })
     },
-    function (products, classes, cb) {
-      insertClasses(classes, mongoConn, function (er, classes) {
+    function (products, classes, tags, cb) {
+      insertClasses(classes, tags, mongoConn, function (er, classes) {
         console.log(classes.length, 'classes inserted')
         cb(er, products, classes)
       })
@@ -247,13 +247,17 @@ function insertTags (classes, products, conn, cb) {
 
   var tasks = getCategoryNames(classes).map(function (name) {
     return function (cb) {
-      ClassTag.insert({name: name}, cb)
+      ClassTag.insert({name: name, slug: slug(name)}, function (er, result) {
+        cb(er, result.ops[0])
+      })
     }
   })
 
   tasks = tasks.concat(getCategoryNames(products).map(function (name) {
     return function (cb) {
-      ProductTag.insert({name: name}, cb)
+      ProductTag.insert({name: name, slug: slug(name)}, function (er, result) {
+        cb(er, result.ops[0])
+      })
     }
   }))
 
@@ -271,8 +275,14 @@ function getCategoryNames (items) {
   }, [])
 }
 
-function insertClasses (classes, conn, cb) {
+function insertClasses (classes, tags, conn, cb) {
   var Class = conn.collection('classes')
+
+  function findTagByName (name) {
+    return tags.filter(function (t) {
+      return t.name == name
+    })[0]
+  }
 
   var tasks = classes.map(function (c) {
     return function (cb) {
@@ -281,9 +291,11 @@ function insertClasses (classes, conn, cb) {
         slug: slug(c.name),
         intro: c.intro,
         desc: c.desc,
-        tags: c.categories.map(function (cat) {
-          return cat.name
-        }),
+        tags: c.categories.reduce(function (tags, cat) {
+          var tag = findTagByName(cat.name)
+          if (tag) tags.push(tag._id)
+          return tags
+        }, []),
         published: true,
         duration: c.duration,
         date: c.date,
@@ -297,8 +309,14 @@ function insertClasses (classes, conn, cb) {
   async.parallel(tasks, cb)
 }
 
-function insertProducts (products, conn, cb) {
+function insertProducts (products, tags, conn, cb) {
   var Product = conn.collection('products')
+
+  function findTagByName (name) {
+    return tags.filter(function (t) {
+      return t.name == name
+    })[0]
+  }
 
   var tasks = products.map(function (c) {
     return function (cb) {
@@ -307,9 +325,11 @@ function insertProducts (products, conn, cb) {
         slug: slug(c.name),
         intro: c.intro,
         desc: c.desc,
-        tags: c.categories.map(function (cat) {
-          return cat.name
-        }),
+        tags: c.categories.reduce(function (tags, cat) {
+          var tag = findTagByName(cat.name)
+          if (tag) tags.push(tag._id)
+          return tags
+        }, []),
         published: true,
         price: c.price,
         stock: c.stock
