@@ -158,8 +158,22 @@ function filterFutureClasses (classes) {
 
     try {
       var timeInfo = getTimeInfo(name)
-      c.duration = timeInfo.duration
       c.date = timeInfo.date
+      c.startTimes = [timeInfo.date]
+      c.endTimes = [moment(timeInfo.date).add(timeInfo.durationHours, 'hours').toDate()]
+
+      if (c.name.indexOf('5 Day Intensive') > -1) {
+        c.duration = 'FIVE_DAY'
+
+        for (var i = 1; i < 5; i ++) {
+          c.startTimes.push(moment(timeInfo.date).add(i, 'days').toDate())
+          c.endTimes.push(moment(timeInfo.date).add(i, 'days').add(timeInfo.durationHours, 'hours').toDate())
+        }
+
+      } else {
+        c.duration = hoursToDuration(timeInfo.durationHours)
+      }
+
     } catch (er) {
       console.error('Ignoring class (invalid time)', name)
       return classes
@@ -201,7 +215,7 @@ function getTimeInfo (name) {
 
   return {
     date: startDate.toDate(),
-    duration: hoursToDuration(((((endDate.valueOf() - startDate.valueOf()) / 1000) / 60) / 60))
+    durationHours: ((((endDate.valueOf() - startDate.valueOf()) / 1000) / 60) / 60)
   }
 }
 
@@ -299,6 +313,8 @@ function insertClasses (classes, tags, conn, cb) {
         published: true,
         duration: c.duration,
         date: c.date,
+        startTimes: c.startTimes,
+        endTimes: c.endTimes,
         price: c.price,
         capacity: c.stock,
         stock: c.stock
